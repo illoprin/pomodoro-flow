@@ -585,6 +585,7 @@ function handleSoundFile(mode, file) {
   }
 
   const reader = new FileReader();
+
   reader.onload = () => {
     const prev = sounds[mode];
     sounds[mode] = { name: file.name, dataUrl: reader.result };
@@ -610,7 +611,7 @@ function renderCounter(bump = false) {
   const todayIters = todayEntry.iterations;
   
   // Время фокуса за текущий день
-  const focusMin = state.sessionsLog[todayKey()].duration;
+  const focusMin = todayEntry.duration;
 
 
   $("#statsRow").innerHTML = `
