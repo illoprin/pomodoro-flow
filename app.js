@@ -66,7 +66,8 @@ const timer = {
 
 let audioCtx = null;
 let currentAudio = null;
-let taskModal, helpModal;
+let taskModal, helpModal, focusStatsModal;
+let focusPeriod = "month";
 
 /* ───────────────── Утилиты ───────────────── */
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -623,6 +624,55 @@ function renderCounter(bump = false) {
   }м</b><span>фокуса</span></div>`;
 }
 
+/* ───────────────── Статистика времени фокуса ───────────────── */
+function renderFocusStats() {
+  const days = focusPeriod === "week" ? 7 : focusPeriod === "year" ? 365 : 30;
+  const today = new Date();
+  const points = [];
+  for (let offset = days - 1; offset >= 0; offset--) {
+    const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - offset));
+    const key = date.toISOString().slice(0, 10);
+    const entry = state.sessionsLog[key];
+    points.push({ date, key, minutes: Math.max(0, Number(entry?.duration) || 0) });
+  }
+  const total = points.reduce((sum, point) => sum + point.minutes, 0);
+  const max = Math.max(1, ...points.map((point) => point.minutes));
+  const width = 900;
+  const height = 270;
+  const left = 42;
+  const right = 12;
+  const top = 16;
+  const bottom = 38;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const gap = points.length > 60 ? 1 : 5;
+  const barWidth = Math.max(1, (plotWidth - gap * (points.length - 1)) / points.length);
+  const bars = points.map((point, index) => {
+    const barHeight = point.minutes ? Math.max(3, point.minutes / max * plotHeight) : 0;
+    const x = left + index * (barWidth + gap);
+    const y = top + plotHeight - barHeight;
+    const label = point.date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "UTC" });
+    return `<rect class="focus-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 2)}"><title>${label}: ${point.minutes} мин</title></rect>`;
+  }).join("");
+  const labelIndexes = focusPeriod === "week" ? [0, 3, 6] : focusPeriod === "month" ? [0, 7, 14, 21, 29] : [0, 90, 180, 270, 364];
+  const labels = labelIndexes.map((index) => {
+    const point = points[index];
+    const x = left + index * (barWidth + gap) + barWidth / 2;
+    const text = focusPeriod === "year"
+      ? point.date.toLocaleDateString("ru-RU", { month: "short", timeZone: "UTC" })
+      : point.date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "UTC" });
+    return `<text class="focus-axis-label" x="${x.toFixed(2)}" y="${height - 8}" text-anchor="middle">${text}</text>`;
+  }).join("");
+  const periodLabel = focusPeriod === "week" ? "за последние 7 дней" : focusPeriod === "year" ? "за последние 365 дней" : "за последние 30 дней";
+  const totalHours = Math.floor(total / 60);
+  const totalMinutes = total % 60;
+  $("#focusStatsSummary").textContent = `${periodLabel} · ${totalHours} ч ${totalMinutes} мин фокуса`;
+  $("#focusChart").innerHTML = total
+    ? `<svg class="focus-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="${periodLabel}"><line class="focus-gridline" x1="${left}" y1="${top + plotHeight}" x2="${width - right}" y2="${top + plotHeight}"/>${bars}${labels}</svg>`
+    : '<div class="focus-chart-empty"><i class="bi bi-bar-chart-line"></i><span>За этот период записей пока нет</span></div>';
+  $$("#focusPeriodSwitch .filter-btn").forEach((button) => button.classList.toggle("active", button.dataset.period === focusPeriod));
+}
+
 /* ───────────────── Рендер: задачи ───────────────── */
 function renderMarkdown(src) {
   if (!src) return "";
@@ -1019,6 +1069,18 @@ function bindEvents() {
     if (!state.titleTimer) document.title = "Pomodoro.Flow";
   });
 
+  /* --- График времени фокуса --- */
+  $("#btnFocusStats").addEventListener("click", () => {
+    renderFocusStats();
+    focusStatsModal.show();
+  });
+  $("#focusPeriodSwitch").addEventListener("click", (e) => {
+    const button = e.target.closest("[data-period]");
+    if (!button) return;
+    focusPeriod = button.dataset.period;
+    renderFocusStats();
+  });
+
   /* --- Экспорт / импорт / очистка --- */
   $("#btnExport").addEventListener("click", exportData);
   $("#btnImport").addEventListener("click", () => $("#importFile").click());
@@ -1209,6 +1271,7 @@ function init() {
 
   taskModal = new bootstrap.Modal($("#taskModal"));
   helpModal = new bootstrap.Modal($("#helpModal"));
+  focusStatsModal = new bootstrap.Modal($("#focusStatsModal"));
 
   $("#chkLongRest").checked = state.longRest;
   $("#numLongEvery").value = state.longRestEvery;

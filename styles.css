@@ -131,7 +131,7 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 .glass-modal {
-  background: rgba(12, 22, 33, 0.82);
+  background: rgba(12, 22, 33, 0.3);
   backdrop-filter: blur(28px) saturate(170%);
   -webkit-backdrop-filter: blur(28px) saturate(170%);
   border: 1px solid var(--glass-brd);
@@ -1006,6 +1006,57 @@ select.glass-input option {
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid var(--glass-brd);
+}
+
+/* ── График времени фокуса ── */
+#focusStatsModal .modal-title {
+  color: var(--txt);
+  font-weight: 750;
+}
+.focus-chart-wrap {
+  min-height: 260px;
+  padding: 1rem 0.65rem 0.35rem;
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, rgba(27, 128, 179, 0.08), rgba(27, 179, 125, 0.025));
+}
+.focus-chart {
+  display: block;
+  width: 100%;
+  height: 270px;
+  overflow: visible;
+}
+.focus-bar {
+  fill: #1bb37e;
+  opacity: 0.7;
+  transition: opacity 0.2s, filter 0.2s;
+}
+.focus-bar:hover {
+  fill: #1bb37e;
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(27, 179, 125, 0.8));
+}
+.focus-gridline {
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-dasharray: 3 5;
+}
+.focus-axis-label {
+  fill: var(--txt-soft);
+  font-size: 12px;
+}
+.focus-chart-empty {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  color: var(--txt-soft);
+}
+.focus-chart-empty i {
+  color: var(--acc-teal);
+  font-size: 2rem;
+  opacity: 0.7;
 }
 
 /* ── Тосты ── */

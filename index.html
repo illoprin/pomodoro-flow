@@ -220,6 +220,10 @@
               <div class="d-flex flex-wrap gap-2 justify-content-sm-end">
                 <button
                   class="btn btn-ghost btn-sm"
+                  id="btnFocusStats"
+                ><i class="bi bi-graph-up-arrow"></i> Фокус</button>
+                <button
+                  class="btn btn-ghost btn-sm"
                   id="btnExport"
                 ><i class="bi bi-download"></i> Экспортировать</button>
                 <button
@@ -453,6 +457,29 @@
             ><i class="bi bi-check-lg"></i> Сохранить</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ МОДАЛКА СТАТИСТИКИ ФОКУСА ══════════ -->
+  <div class="modal fade" id="focusStatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content glass-modal">
+        <div class="modal-header border-0">
+          <div>
+            <h5 class="modal-title mb-1"><i class="bi bi-graph-up-arrow text-grad me-2"></i>Время фокуса</h5>
+            <div class="small text-muted-soft" id="focusStatsSummary"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <div class="filter-switch mb-3" id="focusPeriodSwitch" role="group" aria-label="Период графика">
+            <button class="filter-btn" data-period="week">Неделя</button>
+            <button class="filter-btn active" data-period="month">Месяц</button>
+            <button class="filter-btn" data-period="year">Год</button>
+          </div>
+          <div class="focus-chart-wrap" id="focusChart" role="img" aria-label="График времени фокуса по дням"></div>
+        </div>
       </div>
     </div>
   </div>
