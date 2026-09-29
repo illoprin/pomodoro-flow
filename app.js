@@ -607,6 +607,7 @@ function handleSoundFile(mode, file) {
 function renderCounter(bump = false) {
   const total = state.tasks.length;
   const done = state.tasks.filter((t) => t.done).length;
+  const remaining = total - done;
   const pomos = state.tasks.reduce((a, t) => a + t.pomos, 0);
 
   const todayEntry = state.sessionsLog[todayKey()] || {
@@ -619,12 +620,15 @@ function renderCounter(bump = false) {
   const focusMin = todayEntry.duration;
 
   $("#statsRow").innerHTML = `
-    <div class="stat-chip"><b>${todayIters}</b><span>сегодня</span></div>
-    <div class="stat-chip"><b>${done}/${total}</b><span>задач</span></div>
-    <div class="stat-chip"><b>${pomos}</b><span>на задачах</span></div>
-    <div class="stat-chip"><b>${Math.floor(focusMin / 60)}ч ${
+    <div class="stat-chip"><i class="bi bi-calendar-check stat-icon"></i><b>${todayIters}</b><span>сегодня</span></div>
+    <div class="stat-chip"><i class="bi bi-check2-square stat-icon"></i><b>${done}/${total}</b><span>задач</span></div>
+    <div class="stat-chip"><i class="bi bi-stopwatch stat-icon"></i><b>${pomos}</b><span>на задачах</span></div>
+    <div class="stat-chip"><i class="bi bi-hourglass-split stat-icon"></i><b>${Math.floor(focusMin / 60)}ч ${
       focusMin % 60
     }м</b><span>фокуса</span></div>`;
+  const remainingBadge = $("#taskRemaining");
+  remainingBadge.textContent = `${remaining} осталось`;
+  remainingBadge.classList.toggle("is-complete", remaining === 0 && total > 0);
 }
 
 /* ───────────────── Статистика времени фокуса ───────────────── */
@@ -675,7 +679,7 @@ function renderFocusStats() {
         month: "short",
         timeZone: "UTC",
       });
-      return `<rect class="focus-bar" data-date="${point.key}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 2)}"><title>${label}: ${point.minutes} мин</title></rect>`;
+      return `<rect class="focus-bar" data-date="${point.key}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 2)}"></rect>`;
     })
     .join("");
   const labelIndexes =

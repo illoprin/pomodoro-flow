@@ -605,6 +605,15 @@ select.glass-input option {
   background: var(--glass-bg);
   border: 1px solid var(--glass-brd);
 }
+.stat-icon {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 1.05rem;
+  background: var(--acc-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 .stat-chip b {
   display: block;
   font-size: 1.1rem;
@@ -616,6 +625,26 @@ select.glass-input option {
   color: var(--txt-soft);
   text-transform: uppercase;
   letter-spacing: 0.07em;
+}
+
+.task-remaining {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(27, 128, 179, 0.3);
+  border-radius: 999px;
+  background: rgba(27, 128, 179, 0.1);
+  color: #75d8e8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+.task-remaining.is-complete {
+  border-color: rgba(27, 179, 125, 0.3);
+  background: rgba(27, 179, 125, 0.1);
+  color: #7ce9c0;
 }
 
 /* ── Фильтры ── */
@@ -1287,7 +1316,7 @@ input[type="number"] {
 }
 @media (min-width: 992px) {
   .task-list {
-    max-height: min(70vh, 620px);
+    max-height: min(50vh, 620px);
     overflow-y: auto;
     padding-right: 0.3rem;
   }
