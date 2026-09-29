@@ -122,8 +122,6 @@ body {
 /* ── Стеклянные панели ── */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
   border: 1px solid var(--glass-brd);
   border-radius: var(--radius);
   box-shadow:
@@ -161,14 +159,9 @@ body {
   vertical-align: middle;
 }
 
-.brand-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: var(--acc-grad);
-  box-shadow:
-    0 0 0 4px rgba(27, 128, 179, 0.18),
-    0 0 18px rgba(27, 179, 125, 0.65);
+.brand-icon {
+  flex: 0 0 auto;
+  border-radius: 8px;
 }
 
 .badge-soft {
@@ -233,7 +226,6 @@ body {
   background: var(--glass-bg-2);
   border: 1px solid var(--glass-brd);
   color: var(--txt);
-  backdrop-filter: blur(10px);
 }
 .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.14);
@@ -301,6 +293,10 @@ body {
   background: transparent;
   border: 1px solid transparent;
   color: var(--txt-soft);
+}
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 .btn-icon:hover {
   background: var(--glass-bg-2);
@@ -408,7 +404,7 @@ body {
   inset: 15px;
   border-radius: 50%;
   background: rgba(9, 17, 26, 0.85);
-  backdrop-filter: blur(12px);
+  /* backdrop-filter: blur(12px); */
   border: 1px solid var(--glass-brd);
   display: flex;
   flex-direction: column;
@@ -658,6 +654,10 @@ select.glass-input option {
 .quick-add .form-control {
   flex: 1 1 auto;
 }
+.btn-quick-add {
+  display: flex;
+  gap: 0.33rem;
+}
 .prio-select {
   width: auto;
   flex: 0 0 auto;
@@ -669,6 +669,21 @@ select.glass-input option {
   max-height: min(52vh, 620px);
   overflow-y: auto;
   padding-right: 0.3rem;
+}
+
+.task-date-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0.9rem 0 0.65rem;
+  color: var(--txt-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.task-date-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--glass-brd);
 }
 
 .task-card {
@@ -836,6 +851,27 @@ select.glass-input option {
   display: flex;
   gap: 0.15rem;
   flex: 0 0 auto;
+}
+.task-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6px;
+  color: var(--txt-soft);
+  cursor: grab;
+  touch-action: none;
+}
+.task-card[draggable="true"] {
+  cursor: grab;
+}
+.task-card.dragging {
+  opacity: 0.35;
+}
+.task-card.drop-before {
+  box-shadow: 0 -2px 0 var(--acc-teal);
+}
+.task-card.drop-after {
+  box-shadow: 0 2px 0 var(--acc-teal);
 }
 
 .task-desc {
@@ -1018,7 +1054,11 @@ select.glass-input option {
   padding: 1rem 0.65rem 0.35rem;
   border: 1px solid var(--glass-brd);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(27, 128, 179, 0.08), rgba(27, 179, 125, 0.025));
+  background: linear-gradient(
+    180deg,
+    rgba(27, 128, 179, 0.08),
+    rgba(27, 179, 125, 0.025)
+  );
 }
 .focus-chart {
   display: block;
@@ -1029,7 +1069,9 @@ select.glass-input option {
 .focus-bar {
   fill: #1bb37e;
   opacity: 0.7;
-  transition: opacity 0.2s, filter 0.2s;
+  transition:
+    opacity 0.2s,
+    filter 0.2s;
 }
 .focus-bar:hover {
   fill: #1bb37e;
@@ -1058,6 +1100,54 @@ select.glass-input option {
   font-size: 2rem;
   opacity: 0.7;
 }
+.focus-chart-tooltip {
+  position: fixed;
+  z-index: 1090;
+  width: max-content;
+  max-width: min(310px, calc(100vw - 24px));
+  padding: 0.75rem;
+  border: 1px solid rgba(92, 200, 245, 0.28);
+  border-radius: 14px;
+  background: rgba(8, 18, 28, 0.96);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.48), 0 0 20px rgba(27, 128, 179, 0.12);
+  color: var(--txt);
+  font-size: 0.78rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.focus-chart-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.focus-tooltip-date {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--glass-brd);
+  color: #8ad9ff;
+  font-weight: 700;
+}
+.focus-tooltip-row {
+  display: grid;
+  grid-template-columns: 1rem 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.18rem 0;
+  color: var(--txt-soft);
+}
+.focus-tooltip-row i {
+  color: var(--acc-teal);
+  text-align: center;
+}
+.focus-tooltip-row b {
+  color: var(--txt);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 
 /* ── Тосты ── */
 .toast-wrap {
@@ -1074,7 +1164,6 @@ select.glass-input option {
   padding: 0.7rem 0.9rem;
   border-radius: 13px;
   background: rgba(12, 22, 33, 0.9);
-  backdrop-filter: blur(18px);
   border: 1px solid var(--glass-brd);
   box-shadow: var(--shadow);
   font-size: 0.85rem;
@@ -1155,6 +1244,10 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+.brand {
+  margin-right: auto;
+}
+
 /* ── Адаптив ── */
 @media (max-width: 575.98px) {
   :root {
@@ -1182,9 +1275,19 @@ input[type="number"] {
     max-width: none;
   }
 }
+@media (max-width: 1044px) {
+  .task-list {
+    max-height: 100vh;
+  }
+}
+@media (max-width: 444px) {
+  .brand {
+    margin: 0 auto !important;
+  }
+}
 @media (min-width: 992px) {
   .task-list {
-    max-height: min(52vh, 620px);
+    max-height: min(70vh, 620px);
     overflow-y: auto;
     padding-right: 0.3rem;
   }

@@ -68,6 +68,7 @@ let audioCtx = null;
 let currentAudio = null;
 let taskModal, helpModal, focusStatsModal;
 let focusPeriod = "month";
+let draggedTaskId = null;
 
 /* ───────────────── Утилиты ───────────────── */
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -88,9 +89,9 @@ function escapeHtml(str = "") {
   return String(str).replace(
     /[&<>"']/g,
     (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
         c
-      ])
+      ],
   );
 }
 
@@ -131,7 +132,7 @@ function saveSounds() {
     toast(
       "Звук не сохранён: не хватает места в localStorage. Попробуйте файл поменьше.",
       "err",
-      5200
+      5200,
     );
     return false;
   }
@@ -146,7 +147,7 @@ function loadAll() {
     toast(
       "Сохранённые данные повреждены — загружены значения по умолчанию.",
       "err",
-      5000
+      5000,
     );
   }
   try {
@@ -176,7 +177,7 @@ function normalizeState(raw) {
     break: clamp(
       parseInt(raw?.durations?.break, 10) || d.durations.break,
       1,
-      180
+      180,
     ),
     rest: clamp(parseInt(raw?.durations?.rest, 10) || d.durations.rest, 1, 180),
   };
@@ -215,6 +216,7 @@ function normalizeState(raw) {
         pomos: clamp(parseInt(t?.pomos, 10) || 0, 0, 999),
         done: !!t?.done,
         createdAt: Number(t?.createdAt) || Date.now(),
+        completedAt: typeof t?.completedAt === "string" ? t.completedAt : null,
         expanded: !!t?.expanded,
       }))
     : [];
@@ -405,7 +407,7 @@ function finishTimer() {
   toast(msg, "info", 5000);
   notify(
     `${MODES[finishedMode].label} завершён`,
-    `Следующий режим: ${MODES[next].label}`
+    `Следующий режим: ${MODES[next].label}`,
   );
   flashTitle(`✅ ${MODES[finishedMode].label} завершён`);
 }
@@ -431,7 +433,7 @@ function switchMode(mode, { force = false } = {}) {
       !confirm(
         `Таймер «${MODES[state.mode].label}» ещё идёт. Переключиться на «${
           MODES[mode].label
-        }» и сбросить отсчёт?`
+        }» и сбросить отсчёт?`,
       )
     )
       return;
@@ -461,7 +463,7 @@ function requestNotify() {
   Notification.requestPermission().then((p) => {
     toast(
       p === "granted" ? "Уведомления включены." : "Уведомления не разрешены.",
-      p === "granted" ? "ok" : "info"
+      p === "granted" ? "ok" : "info",
     );
     updateNotifyBtn();
   });
@@ -525,11 +527,10 @@ function renderTimer() {
 function updateStatus(text, cls) {
   $("#statusText").textContent = text;
   $("#statusBadge").className = "badge-soft " + (cls || "");
-  $(
-    "#statusBadge"
-  ).innerHTML = `<i class="bi bi-circle-fill me-1 tiny"></i><span id="statusText">${escapeHtml(
-    text
-  )}</span>`;
+  $("#statusBadge").innerHTML =
+    `<i class="bi bi-circle-fill me-1 tiny"></i><span id="statusText">${escapeHtml(
+      text,
+    )}</span>`;
 }
 
 /* ───────────────── Рендер: настройки таймеров ───────────────── */
@@ -578,10 +579,10 @@ function handleSoundFile(mode, file) {
   if (file.size > MAX_SOUND_BYTES) {
     return toast(
       `Файл больше 2 МБ (${(file.size / 1048576).toFixed(
-        1
+        1,
       )} МБ). Выберите короткий сигнал.`,
       "err",
-      5000
+      5000,
     );
   }
 
@@ -604,24 +605,26 @@ function handleSoundFile(mode, file) {
 
 /* ───────────────── Рендер: счётчик и статистика ───────────────── */
 function renderCounter(bump = false) {
-  const total   = state.tasks.length;
-  const done    = state.tasks.filter(t => t.done).length;
-  const pomos   = state.tasks.reduce((a, t) => a + t.pomos, 0);
-  
-  const todayEntry = state.sessionsLog[todayKey()] || { iterations: 0, duration: 0 };
+  const total = state.tasks.length;
+  const done = state.tasks.filter((t) => t.done).length;
+  const pomos = state.tasks.reduce((a, t) => a + t.pomos, 0);
+
+  const todayEntry = state.sessionsLog[todayKey()] || {
+    iterations: 0,
+    duration: 0,
+  };
   const todayIters = todayEntry.iterations;
-  
+
   // Время фокуса за текущий день
   const focusMin = todayEntry.duration;
-
 
   $("#statsRow").innerHTML = `
     <div class="stat-chip"><b>${todayIters}</b><span>сегодня</span></div>
     <div class="stat-chip"><b>${done}/${total}</b><span>задач</span></div>
     <div class="stat-chip"><b>${pomos}</b><span>на задачах</span></div>
     <div class="stat-chip"><b>${Math.floor(focusMin / 60)}ч ${
-    focusMin % 60
-  }м</b><span>фокуса</span></div>`;
+      focusMin % 60
+    }м</b><span>фокуса</span></div>`;
 }
 
 /* ───────────────── Статистика времени фокуса ───────────────── */
@@ -630,10 +633,20 @@ function renderFocusStats() {
   const today = new Date();
   const points = [];
   for (let offset = days - 1; offset >= 0; offset--) {
-    const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - offset));
+    const date = new Date(
+      Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - offset,
+      ),
+    );
     const key = date.toISOString().slice(0, 10);
     const entry = state.sessionsLog[key];
-    points.push({ date, key, minutes: Math.max(0, Number(entry?.duration) || 0) });
+    points.push({
+      date,
+      key,
+      minutes: Math.max(0, Number(entry?.duration) || 0),
+    });
   }
   const total = points.reduce((sum, point) => sum + point.minutes, 0);
   const max = Math.max(1, ...points.map((point) => point.minutes));
@@ -646,31 +659,95 @@ function renderFocusStats() {
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const gap = points.length > 60 ? 1 : 5;
-  const barWidth = Math.max(1, (plotWidth - gap * (points.length - 1)) / points.length);
-  const bars = points.map((point, index) => {
-    const barHeight = point.minutes ? Math.max(3, point.minutes / max * plotHeight) : 0;
-    const x = left + index * (barWidth + gap);
-    const y = top + plotHeight - barHeight;
-    const label = point.date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "UTC" });
-    return `<rect class="focus-bar" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 2)}"><title>${label}: ${point.minutes} мин</title></rect>`;
-  }).join("");
-  const labelIndexes = focusPeriod === "week" ? [0, 3, 6] : focusPeriod === "month" ? [0, 7, 14, 21, 29] : [0, 90, 180, 270, 364];
-  const labels = labelIndexes.map((index) => {
-    const point = points[index];
-    const x = left + index * (barWidth + gap) + barWidth / 2;
-    const text = focusPeriod === "year"
-      ? point.date.toLocaleDateString("ru-RU", { month: "short", timeZone: "UTC" })
-      : point.date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: "UTC" });
-    return `<text class="focus-axis-label" x="${x.toFixed(2)}" y="${height - 8}" text-anchor="middle">${text}</text>`;
-  }).join("");
-  const periodLabel = focusPeriod === "week" ? "за последние 7 дней" : focusPeriod === "year" ? "за последние 365 дней" : "за последние 30 дней";
+  const barWidth = Math.max(
+    1,
+    (plotWidth - gap * (points.length - 1)) / points.length,
+  );
+  const bars = points
+    .map((point, index) => {
+      const barHeight = point.minutes
+        ? Math.max(3, (point.minutes / max) * plotHeight)
+        : 0;
+      const x = left + index * (barWidth + gap);
+      const y = top + plotHeight - barHeight;
+      const label = point.date.toLocaleDateString("ru-RU", {
+        day: "numeric",
+        month: "short",
+        timeZone: "UTC",
+      });
+      return `<rect class="focus-bar" data-date="${point.key}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 2)}"><title>${label}: ${point.minutes} мин</title></rect>`;
+    })
+    .join("");
+  const labelIndexes =
+    focusPeriod === "week"
+      ? [0, 3, 6]
+      : focusPeriod === "month"
+        ? [0, 7, 14, 21, 29]
+        : [0, 90, 180, 270, 364];
+  const labels = labelIndexes
+    .map((index) => {
+      const point = points[index];
+      const x = left + index * (barWidth + gap) + barWidth / 2;
+      const text =
+        focusPeriod === "year"
+          ? point.date.toLocaleDateString("ru-RU", {
+              month: "short",
+              timeZone: "UTC",
+            })
+          : point.date.toLocaleDateString("ru-RU", {
+              day: "numeric",
+              month: "short",
+              timeZone: "UTC",
+            });
+      return `<text class="focus-axis-label" x="${x.toFixed(2)}" y="${height - 8}" text-anchor="middle">${text}</text>`;
+    })
+    .join("");
+  const periodLabel =
+    focusPeriod === "week"
+      ? "за последние 7 дней"
+      : focusPeriod === "year"
+        ? "за последние 365 дней"
+        : "за последние 30 дней";
   const totalHours = Math.floor(total / 60);
   const totalMinutes = total % 60;
-  $("#focusStatsSummary").textContent = `${periodLabel} · ${totalHours} ч ${totalMinutes} мин фокуса`;
+  $("#focusStatsSummary").textContent =
+    `${periodLabel} · ${totalHours} ч ${totalMinutes} мин фокуса`;
   $("#focusChart").innerHTML = total
     ? `<svg class="focus-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="${periodLabel}"><line class="focus-gridline" x1="${left}" y1="${top + plotHeight}" x2="${width - right}" y2="${top + plotHeight}"/>${bars}${labels}</svg>`
     : '<div class="focus-chart-empty"><i class="bi bi-bar-chart-line"></i><span>За этот период записей пока нет</span></div>';
-  $$("#focusPeriodSwitch .filter-btn").forEach((button) => button.classList.toggle("active", button.dataset.period === focusPeriod));
+  $$("#focusPeriodSwitch .filter-btn").forEach((button) =>
+    button.classList.toggle("active", button.dataset.period === focusPeriod),
+  );
+}
+
+function showFocusTooltip(bar, event) {
+  const date = bar.dataset.date;
+  const entry = state.sessionsLog[date] || {};
+  const created = state.tasks.filter((task) => {
+    const createdAt = new Date(task.createdAt);
+    return `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${String(createdAt.getDate()).padStart(2, "0")}` === date;
+  }).length;
+  const completed = state.tasks.filter((task) => task.done && task.completedAt === date).length;
+  let tooltip = $("#focusChartTooltip");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = "focusChartTooltip";
+    tooltip.className = "focus-chart-tooltip";
+    document.body.appendChild(tooltip);
+  }
+  tooltip.innerHTML = `
+    <div class="focus-tooltip-date"><i class="bi bi-calendar3"></i>${new Date(`${date}T00:00:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}</div>
+    <div class="focus-tooltip-row"><i class="bi bi-clock-history"></i><span>Время фокуса</span><b>${Math.floor((entry.duration || 0) / 60)} ч ${(entry.duration || 0) % 60} мин</b></div>
+    <div class="focus-tooltip-row"><i class="bi bi-record-circle"></i><span>Итераций Pomodoro</span><b>${entry.iterations || 0}</b></div>
+    <div class="focus-tooltip-row"><i class="bi bi-check2-circle"></i><span>Задач выполнено</span><b>${completed}</b></div>
+    <div class="focus-tooltip-row"><i class="bi bi-plus-circle"></i><span>Задач создано</span><b>${created}</b></div>`;
+  tooltip.classList.add("visible");
+  tooltip.style.left = `${Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 12)}px`;
+  tooltip.style.top = `${Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 12)}px`;
+}
+
+function hideFocusTooltip() {
+  $("#focusChartTooltip")?.classList.remove("visible");
 }
 
 /* ───────────────── Рендер: задачи ───────────────── */
@@ -717,7 +794,7 @@ function sanitize(html) {
 function visibleTasks() {
   const f = state.filter;
   return state.tasks.filter((t) =>
-    f === "all" ? true : f === "done" ? t.done : !t.done
+    f === "all" ? true : f === "done" ? t.done : !t.done,
   );
 }
 
@@ -731,16 +808,27 @@ function renderTasks() {
       ? "Задач пока нет. Добавьте первую — и запускайте таймер."
       : "В этом фильтре задач нет.";
 
+  let previousDate = null;
   list.innerHTML = items
     .map((t) => {
       const p = PRIO[t.prio];
       const isFocus = t.id === state.focusTaskId;
       const hasDesc = !!t.desc.trim();
-      return `
+      const createdDate = new Date(t.createdAt)
+        .toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
+        .replace(/ г\.?$/, "");
+      const divider =
+        createdDate !== previousDate
+          ? `<div class="task-date-divider">${createdDate}</div>`
+          : "";
+      previousDate = createdDate;
+      return `${divider}
     <article class="task-card ${t.done ? "done" : ""} ${
-        isFocus ? "focused" : ""
-      }" data-prio="${t.prio}" data-id="${t.id}">
+      isFocus ? "focused" : ""
+    }" data-prio="${t.prio}" data-id="${t.id}" draggable="true">
+      
       <div class="task-head">
+      <span class="task-drag-handle" title="Перетащить задачу" aria-label="Перетащить задачу"><i class="bi bi-grip-vertical"></i></span>
         <button class="task-check ${t.done ? "checked" : ""}" data-act="toggle"
                 title="${t.done ? "Вернуть в работу" : "Отметить выполненной"}"
                 aria-pressed="${t.done}"><i class="bi bi-check-lg"></i></button>
@@ -768,6 +856,7 @@ function renderTasks() {
         </div>
 
         <div class="task-actions">
+          
           <button class="btn-icon ${isFocus ? "on" : ""}" data-act="focus"
                   title="${
                     isFocus ? "Снять фокус" : "Считать помодоро на эту задачу"
@@ -779,7 +868,7 @@ function renderTasks() {
       ${
         hasDesc && t.expanded
           ? `<div class="task-desc markdown-body">${renderMarkdown(
-              t.desc
+              t.desc,
             )}</div>`
           : ""
       }
@@ -794,10 +883,10 @@ function renderAll() {
   renderTasks();
   renderTimer();
   $$(".mode-btn").forEach((b) =>
-    b.classList.toggle("active", b.dataset.mode === state.mode)
+    b.classList.toggle("active", b.dataset.mode === state.mode),
   );
   $$(".filter-btn").forEach((b) =>
-    b.classList.toggle("active", b.dataset.filter === state.filter)
+    b.classList.toggle("active", b.dataset.filter === state.filter),
   );
 }
 
@@ -811,6 +900,7 @@ function addTask(data) {
     pomos: clamp(parseInt(data.pomos, 10) || 0, 0, 999),
     done: false,
     createdAt: Date.now(),
+    completedAt: null,
     expanded: false,
   });
   saveState();
@@ -821,6 +911,11 @@ function addTask(data) {
 function updateTask(id, patch, { rerender = true } = {}) {
   const t = state.tasks.find((x) => x.id === id);
   if (!t) return;
+  if (Object.prototype.hasOwnProperty.call(patch, "done")) {
+    patch.completedAt = patch.done
+      ? new Date().toISOString().slice(0, 10)
+      : null;
+  }
   Object.assign(t, patch);
   saveState();
   if (rerender) renderTasks();
@@ -868,6 +963,14 @@ function openTaskModal(id = null) {
   $("#taskDesc").value = isEdit ? t.desc : "";
   $("#taskPrio").value = isEdit ? t.prio : "med";
   $("#taskPomos").value = isEdit ? t.pomos : 0;
+  $("#taskCreatedAtGroup").classList.toggle("d-none", !isEdit);
+  $("#taskCreatedAt").value = isEdit
+    ? new Date(t.createdAt).toLocaleString("ru-RU")
+    : "";
+  $("#taskCompletedAtGroup").classList.toggle("d-none", !isEdit || !t.done);
+  $("#taskCompletedAt").value = isEdit && t.done && t.completedAt
+    ? new Date(t.completedAt).toLocaleDateString("ru-RU")
+    : "";
 
   setMdTab("edit");
   taskModal.show();
@@ -879,7 +982,7 @@ function setMdTab(tab) {
   $("#taskDesc").classList.toggle("d-none", !isEdit);
   $("#taskDescPreview").classList.toggle("d-none", isEdit);
   $$(".md-tab").forEach((b) =>
-    b.classList.toggle("active", b.dataset.mdtab === tab)
+    b.classList.toggle("active", b.dataset.mdtab === tab),
   );
   if (!isEdit) {
     const src = $("#taskDesc").value.trim();
@@ -940,13 +1043,13 @@ function importData(file) {
       return toast(
         "Структура файла не подходит: нет списка задач.",
         "err",
-        5000
+        5000,
       );
     }
     const cnt = parsed.tasks.length;
     if (
       !confirm(
-        `Импортировать данные? Текущие задачи (${state.tasks.length}) и настройки будут заменены на ${cnt} задач(и) из файла.`
+        `Импортировать данные? Текущие задачи (${state.tasks.length}) и настройки будут заменены на ${cnt} задач(и) из файла.`,
       )
     )
       return;
@@ -964,7 +1067,7 @@ function importData(file) {
 function clearAll() {
   if (
     !confirm(
-      "Очистить всё?\n\nБудут удалены все задачи, обнулён счётчик итераций и сброшены настройки времени. Загруженные звуки сохранятся.\n\nДействие необратимо."
+      "Очистить всё?\n\nБудут удалены все задачи, обнулён счётчик итераций и сброшены настройки времени. Загруженные звуки сохранятся.\n\nДействие необратимо.",
     )
   )
     return;
@@ -979,7 +1082,7 @@ function clearAll() {
 function bindEvents() {
   /* --- Режимы --- */
   $$(".mode-btn").forEach((btn) =>
-    btn.addEventListener("click", () => switchMode(btn.dataset.mode))
+    btn.addEventListener("click", () => switchMode(btn.dataset.mode)),
   );
 
   /* --- Управление таймером --- */
@@ -1001,7 +1104,7 @@ function bindEvents() {
       const val = clamp(
         parseInt(durInput.value, 10) || MODES[mode].def,
         1,
-        180
+        180,
       );
       durInput.value = val;
       state.durations[mode] = val;
@@ -1010,7 +1113,7 @@ function bindEvents() {
         if (timer.running) {
           if (
             confirm(
-              "Таймер идёт. Применить новую длительность и перезапустить отсчёт?"
+              "Таймер идёт. Применить новую длительность и перезапустить отсчёт?",
             )
           )
             resetTimer();
@@ -1040,7 +1143,7 @@ function bindEvents() {
       const mode = del.dataset.delsound;
       if (
         !confirm(
-          `Удалить свой звук для «${MODES[mode].label}» и вернуть встроенный сигнал?`
+          `Удалить свой звук для «${MODES[mode].label}» и вернуть встроенный сигнал?`,
         )
       )
         return;
@@ -1074,6 +1177,12 @@ function bindEvents() {
     renderFocusStats();
     focusStatsModal.show();
   });
+  $("#focusChart").addEventListener("pointermove", (e) => {
+    const bar = e.target.closest(".focus-bar");
+    if (bar) showFocusTooltip(bar, e);
+    else hideFocusTooltip();
+  });
+  $("#focusChart").addEventListener("pointerleave", hideFocusTooltip);
   $("#focusPeriodSwitch").addEventListener("click", (e) => {
     const button = e.target.closest("[data-period]");
     if (!button) return;
@@ -1114,8 +1223,61 @@ function bindEvents() {
   /* --- Кнопка «Задача» --- */
   $("#btnAddTask").addEventListener("click", () => openTaskModal());
 
+  /* --- Drag and drop задач --- */
+  const taskList = $("#taskList");
+  taskList.addEventListener("dragstart", (e) => {
+    const card = e.target.closest(".task-card");
+    if (!card) return;
+    draggedTaskId = card.dataset.id;
+    card.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", draggedTaskId);
+  });
+  taskList.addEventListener("dragover", (e) => {
+    const target = e.target.closest(".task-card");
+    if (!target || target.dataset.id === draggedTaskId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const rect = target.getBoundingClientRect();
+    target.classList.toggle(
+      "drop-before",
+      e.clientY < rect.top + rect.height / 2,
+    );
+    target.classList.toggle(
+      "drop-after",
+      e.clientY >= rect.top + rect.height / 2,
+    );
+  });
+  taskList.addEventListener("drop", (e) => {
+    const target = e.target.closest(".task-card");
+    if (!target || !draggedTaskId || target.dataset.id === draggedTaskId)
+      return;
+    e.preventDefault();
+    const visible = visibleTasks();
+    const fromIndex = visible.findIndex((task) => task.id === draggedTaskId);
+    let toIndex = visible.findIndex((task) => task.id === target.dataset.id);
+    const rect = target.getBoundingClientRect();
+    if (e.clientY >= rect.top + rect.height / 2) toIndex++;
+    const [moved] = visible.splice(fromIndex, 1);
+    if (fromIndex < toIndex) toIndex--;
+    visible.splice(toIndex, 0, moved);
+    const visibleIds = new Set(visible.map((task) => task.id));
+    let visibleIndex = 0;
+    state.tasks = state.tasks.map((task) =>
+      visibleIds.has(task.id) ? visible[visibleIndex++] : task,
+    );
+    saveState();
+    renderTasks();
+  });
+  taskList.addEventListener("dragend", () => {
+    draggedTaskId = null;
+    $$(".task-card", taskList).forEach((card) =>
+      card.classList.remove("dragging", "drop-before", "drop-after"),
+    );
+  });
+
   /* --- Действия в карточках (делегирование) --- */
-  $("#taskList").addEventListener("click", (e) => {
+  taskList.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-act]");
     if (!btn) return;
     const card = e.target.closest(".task-card");
@@ -1146,7 +1308,7 @@ function bindEvents() {
             ? `Помодоро будут засчитываться задаче «${t.title}».`
             : "Фокус снят.",
           "info",
-          2600
+          2600,
         );
         break;
       case "edit":
@@ -1159,6 +1321,12 @@ function bindEvents() {
   });
 
   /* --- Форма задачи --- */
+  $("#taskModal").addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "Enter") {
+      e.preventDefault();
+      $("#taskForm").requestSubmit();
+    }
+  });
   $("#taskForm").addEventListener("submit", (e) => {
     e.preventDefault();
     const id = $("#taskId").value;
@@ -1184,18 +1352,18 @@ function bindEvents() {
     $("#taskPomos").value = clamp(
       (parseInt($("#taskPomos").value, 10) || 0) + 1,
       0,
-      999
+      999,
     );
   });
   $("#taskPomoMinus").addEventListener("click", () => {
     $("#taskPomos").value = clamp(
       (parseInt($("#taskPomos").value, 10) || 0) - 1,
       0,
-      999
+      999,
     );
   });
   $$(".md-tab").forEach((b) =>
-    b.addEventListener("click", () => setMdTab(b.dataset.mdtab))
+    b.addEventListener("click", () => setMdTab(b.dataset.mdtab)),
   );
 
   /* --- Прочее --- */
