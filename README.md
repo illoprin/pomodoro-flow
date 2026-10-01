@@ -1,19 +1,36 @@
-# Pomodoro.Flow 🍅
+<h1 align="center">
+  Pomodoro.Flow 🍅 - stay in focus
+</h1>
 
-Современный, эстетичный и функциональный таймер техники Pomodoro с управлением задачами, работающий прямо в браузере. Приложение использует эффект стекломорфизма (glassmorphism), поддерживает темную тему, локальное хранение данных и гибкую настройку звуковых уведомлений.
+<p align="center">
+  <a href="illoprin.github.io/pomodoro-flow">
+    Try Pomodoro.Flow
+  </a>
+</p>
 
-![App](./img/img1.jpg)
 
-![Focus Time](./img/img2.jpg)
+[![Русский](https://img.shields.io/badge/lang-Русский-blue.svg)](README.ru.md) [![English](https://img.shields.io/badge/lang-English-red.svg)](README.md)
 
-## ✨ Особенности
+![Platform](https://img.shields.io/badge/platform-browser-lightgrey.svg)
 
-*   **Гибкие режимы:** Работа, Короткий перерыв и Длинный отдых. Автоматическое переключение режимов после завершения таймера.
-*   **Управление задачами:** Создавайте задачи с приоритетами (Низкий, Средний, Высокий), добавляйте описания в формате Markdown и отслеживайте количество затраченных помодоро-итераций.
-*   **Фокус на задаче:** Привяжите таймер к конкретной задаче, чтобы автоматически учитывать прогресс.
-*   **Кастомизация звуков:** Загружайте свои MP3/WAV файлы для сигналов начала/окончания режимов (до 2 МБ). Встроенные мелодичные сигналы генерируются через Web Audio API.
-*   **Статистика:** Отслеживайте общее количество итераций, выполненные задачи и время фокуса за сегодня.
-*   **Локальное хранение:** Все данные (задачи, настройки, звуки) сохраняются в `localStorage` вашего браузера. Никаких серверов и регистрации.
-*   **Экспорт/Импорт:** Сохраняйте резервные копии своих данных в JSON или переносите их между устройствами.
-*   **Горячие клавиши:** Быстрое управление таймером и задачами с клавиатуры.
-*   **Адаптивный дизайн:** Красиво выглядит как на десктопе, так и на мобильных устройствах.
+A modern, feature-rich Pomodoro timer with task management that runs right in your browser. It features a glassmorphism design, dark mode, local data storage, and customizable sound notifications.
+
+<p align="center">
+  <img src="./img/img1.jpg" alt="Pomodoro.Flow main screen">
+</p>
+
+<p align="center">
+  <img src="./img/img2.jpg" alt="Focus time">
+</p>
+
+## ✨ Features
+
+* **Flexible modes:** focus, short break, and long break, with automatic mode switching when the timer ends.
+* **Task management:** create tasks with low, medium, or high priority, add Markdown descriptions, and track Pomodoro sessions spent on each task.
+* **Task focus:** link the timer to a task to track its progress automatically.
+* **Custom sounds:** upload your own MP3/WAV files (up to 2 MB). Built-in melodic alerts are generated with the Web Audio API.
+* **Statistics:** track total sessions, completed tasks, and today's focus time.
+* **Local storage:** tasks, settings, and sounds are saved in your browser's `localStorage`. No server or account required.
+* **Export and import:** back up your data as JSON or transfer it between devices.
+* **Keyboard shortcuts:** control the timer and tasks from your keyboard.
+* **Responsive design:** works beautifully on desktop and mobile devices.

@@ -729,9 +729,14 @@ function showFocusTooltip(bar, event) {
   const entry = state.sessionsLog[date] || {};
   const created = state.tasks.filter((task) => {
     const createdAt = new Date(task.createdAt);
-    return `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${String(createdAt.getDate()).padStart(2, "0")}` === date;
+    return (
+      `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}-${String(createdAt.getDate()).padStart(2, "0")}` ===
+      date
+    );
   }).length;
-  const completed = state.tasks.filter((task) => task.done && task.completedAt === date).length;
+  const completed = state.tasks.filter(
+    (task) => task.done && task.completedAt === date,
+  ).length;
   let tooltip = $("#focusChartTooltip");
   if (!tooltip) {
     tooltip = document.createElement("div");
@@ -829,9 +834,9 @@ function renderTasks() {
       return `${divider}
     <article class="task-card ${t.done ? "done" : ""} ${
       isFocus ? "focused" : ""
-    }" data-prio="${t.prio}" data-id="${t.id}" draggable="true">
+    }" data-prio="${t.prio}" data-id="${t.id}">
       
-      <div class="task-head">
+      <div class="task-head" draggable="true">
       <span class="task-drag-handle" title="Перетащить задачу" aria-label="Перетащить задачу"><i class="bi bi-grip-vertical"></i></span>
         <button class="task-check ${t.done ? "checked" : ""}" data-act="toggle"
                 title="${t.done ? "Вернуть в работу" : "Отметить выполненной"}"
@@ -972,9 +977,10 @@ function openTaskModal(id = null) {
     ? new Date(t.createdAt).toLocaleString("ru-RU")
     : "";
   $("#taskCompletedAtGroup").classList.toggle("d-none", !isEdit || !t.done);
-  $("#taskCompletedAt").value = isEdit && t.done && t.completedAt
-    ? new Date(t.completedAt).toLocaleDateString("ru-RU")
-    : "";
+  $("#taskCompletedAt").value =
+    isEdit && t.done && t.completedAt
+      ? new Date(t.completedAt).toLocaleDateString("ru-RU")
+      : "";
 
   setMdTab("edit");
   taskModal.show();
@@ -1225,7 +1231,10 @@ function bindEvents() {
   });
 
   /* --- Кнопка «Задача» --- */
-  $("#btnAddTask").addEventListener("click", () => openTaskModal());
+  $("#btnAddTask").addEventListener("click", (e) => {
+    e.preventDefault();
+    openTaskModal();
+  });
 
   /* --- Drag and drop задач --- */
   const taskList = $("#taskList");
@@ -1237,10 +1246,12 @@ function bindEvents() {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", draggedTaskId);
   });
+  
   taskList.addEventListener("dragover", (e) => {
+    if (!draggedTaskId) return;
+    e.preventDefault();
     const target = e.target.closest(".task-card");
     if (!target || target.dataset.id === draggedTaskId) return;
-    e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     const rect = target.getBoundingClientRect();
     target.classList.toggle(
@@ -1252,11 +1263,12 @@ function bindEvents() {
       e.clientY >= rect.top + rect.height / 2,
     );
   });
+  
   taskList.addEventListener("drop", (e) => {
-    const target = e.target.closest(".task-card");
-    if (!target || !draggedTaskId || target.dataset.id === draggedTaskId)
-      return;
+    if (!draggedTaskId) return;
     e.preventDefault();
+    const target = e.target.closest(".task-card");
+    if (!target || target.dataset.id === draggedTaskId) return;
     const visible = visibleTasks();
     const fromIndex = visible.findIndex((task) => task.id === draggedTaskId);
     let toIndex = visible.findIndex((task) => task.id === target.dataset.id);

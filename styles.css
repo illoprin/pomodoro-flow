@@ -890,8 +890,11 @@ select.glass-input option {
   cursor: grab;
   touch-action: none;
 }
-.task-card[draggable="true"] {
+.task-head[draggable="true"] {
   cursor: grab;
+}
+.task-head[draggable="true"]:active {
+  cursor: grabbing;
 }
 .task-card.dragging {
   opacity: 0.35;
