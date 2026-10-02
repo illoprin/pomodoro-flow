@@ -6,7 +6,194 @@
 /* ───────────────── Константы и ключи хранилища ───────────────── */
 const LS_STATE = "pomodoroFlow.state.v1"; // задачи, настройки, счётчик
 const LS_SOUNDS = "pomodoroFlow.sounds.v1"; // аудио data-URL (отдельно: тяжёлые)
+const LS_FIRST_VISIT = "pomodoroFlow.firstVisit.v1";
+const LS_LANGUAGE = "pomodoroFlow.language.v1";
 const MAX_SOUND_BYTES = 2 * 1024 * 1024; // 2 МБ на файл
+let language = localStorage.getItem(LS_LANGUAGE) || "ru";
+
+const translations = {
+  Готов: "Ready",
+  Работа: "Work",
+  Перерыв: "Break",
+  Отдых: "Rest",
+  Старт: "Start",
+  Пауза: "Pause",
+  Сброс: "Reset",
+  Продолжить: "Resume",
+  Статистика: "Statistics",
+  Уведомления: "Notifications",
+  Настройки: "Settings",
+  Справка: "Help",
+  Экспортировать: "Export",
+  Импортировать: "Import",
+  "Экспортировать данные": "Export data",
+  "Импортировать данные": "Import data",
+  "Удалить все данные": "Delete all data",
+  "Длительность и звуки": "Duration and sounds",
+  Тест: "Test",
+  "Длинный «Отдых» после каждых": "Long rest after every",
+  "итераций работы": "work sessions",
+  "Показывать отсчёт во вкладке браузера": "Show countdown in browser tab",
+  Задачи: "Tasks",
+  Все: "All",
+  Активные: "Active",
+  Готовые: "Completed",
+  Низкий: "Low",
+  Средний: "Medium",
+  Высокий: "High",
+  Задача: "Task",
+  Приоритет: "Priority",
+  "Новая задача — Enter, чтобы добавить…": "New task — press Enter to add…",
+  "Задач пока нет. Добавьте первую — и запускайте таймер.":
+    "No tasks yet. Add your first task and start the timer.",
+  "В этом фильтре задач нет.": "No tasks in this filter.",
+  "Данные хранятся локально в вашем браузере (localStorage) ·":
+    "Your data is stored locally in your browser (localStorage) ·",
+  "Ещё больше моих проектов на illoprin.ru":
+    "More of my projects at illoprin.ru",
+  "Язык интерфейса": "Interface language",
+  Русский: "Русский",
+  "Выберите язык / Choose your language": "Choose your language",
+  "На каком языке показать знакомство с приложением?":
+    "Which language would you like to use for the app introduction?",
+  "Новая задача": "New task",
+  Закрыть: "Close",
+  Создана: "Created",
+  Выполнена: "Completed",
+  Наименование: "Task name",
+  Описание: "Description",
+  Текст: "Text",
+  Превью: "Preview",
+  "**Жирный**, *курсив*, [ссылка](https://…), ![картинка](https://…/pic.png)\n- пункт списка\n- [ ] чекбокс\n`код`":
+    "**Bold**, *italic*, [link](https://…), ![image](https://…/pic.png)\n- list item\n- [ ] checkbox\n`code`",
+  "Итераций помодоро": "Pomodoro sessions",
+  Отмена: "Cancel",
+  Сохранить: "Save",
+  "Редактирование задачи": "Edit task",
+  "Время фокуса": "Focus time",
+  Неделя: "Week",
+  Месяц: "Month",
+  Год: "Year",
+  "Период графика": "Chart period",
+  "График времени фокуса по дням": "Daily focus time chart",
+  "Справка и горячие клавиши": "Help and keyboard shortcuts",
+  "Горячие клавиши:": "Keyboard shortcuts:",
+  "Старт / Пауза": "Start / Pause",
+  "Сброс таймера": "Reset timer",
+  "Работа / Перерыв / Отдых": "Work / Break / Rest",
+  "Как это работает:": "How it works:",
+  "По окончании таймера играет звук и режим переключается автоматически, но отсчёт ждёт вашего «Старт».":
+    "When the timer ends, a sound plays and the mode switches automatically, but the next countdown waits for you to press Start.",
+  "Завершённая «Работа» увеличивает общий счётчик и счётчик":
+    "A completed Work session increments the total counter and the counter",
+  "активной задачи (кнопка": "for the focused task (the button",
+  "в карточке).": "in the task card).",
+  "Свои звуки (MP3/WAV) хранятся в localStorage в виде data-URL,":
+    "Custom sounds (MP3/WAV) are stored in localStorage as data URLs,",
+  "лимит — 2 МБ на файл.": "with a 2 MB limit per file.",
+  "Разрешить уведомления браузера": "Allow browser notifications",
+  "Проверить звук текущего режима": "Test the current mode sound",
+  Markdown: "Markdown",
+  "Описание пусто. Markdown поддерживает заголовки, списки, ссылки, картинки, код и таблицы.":
+    "Description is empty. Markdown supports headings, lists, links, images, code, and tables.",
+  Сегодня: "Today",
+  сегодня: "today",
+  задач: "tasks",
+  "на задачах": "on tasks",
+  фокуса: "focused",
+  осталось: "remaining",
+  мин: "min",
+  "Работа идёт": "Work in progress",
+  "Перерыв идёт": "Break in progress",
+  "Отдых идёт": "Rest in progress",
+  "Нужен аудиофайл (MP3 / WAV).": "Please choose an audio file (MP3 / WAV).",
+  "Встроенный сигнал": "Built-in sound",
+  Встроенный: "Built-in",
+  Прослушать: "Play sound",
+  "Загрузить свой MP3/WAV": "Upload custom MP3/WAV",
+  "Вернуть встроенный": "Restore built-in sound",
+  Минуты: "Minutes",
+  Свернуть: "Collapse",
+  "Отметить выполненной": "Mark as completed",
+  "Вернуть в работу": "Reopen task",
+  "Перетащить задачу": "Drag task",
+  "Итерации помодоро по задаче": "Pomodoro sessions for this task",
+  "Минус итерация": "Decrease sessions",
+  "Плюс итерация": "Increase sessions",
+  "Снять фокус": "Unfocus task",
+  "Считать помодоро на эту задачу": "Count Pomodoros for this task",
+  Редактировать: "Edit",
+  Удалить: "Delete",
+  "— Сброс таймера": "— Reset timer",
+  "— Новая задача": "— New task",
+  "— Работа / Перерыв /": "— Work / Break /",
+  "Браузер не поддерживает уведомления.":
+    "Your browser does not support notifications.",
+  "Уведомления уже разрешены.": "Notifications are already allowed.",
+  "Уведомления включены.": "Notifications enabled.",
+  "Уведомления не разрешены.": "Notifications were not allowed.",
+  "Не удалось сохранить данные: хранилище переполнено.":
+    "Could not save data: browser storage is full.",
+  "Задача удалена.": "Task deleted.",
+  "Задача обновлена.": "Task updated.",
+  "Задача добавлена.": "Task added.",
+  "Фокус снят.": "Task focus cleared.",
+  "Данные выгружены в JSON.": "Data exported as JSON.",
+  "Файл не является корректным JSON.": "The file is not valid JSON.",
+  "Не удалось прочитать файл.": "Could not read the file.",
+  "Все данные очищены.": "All data cleared.",
+  "Таймер сброшен.": "Timer reset.",
+  "Сбросить текущий отсчёт?": "Reset the current countdown?",
+  "Звук не сохранён: не хватает места в localStorage. Попробуйте файл поменьше.":
+    "Sound not saved: there is not enough localStorage space. Try a smaller file.",
+};
+
+const originalTextNodes = new WeakMap();
+const originalAttributes = new WeakMap();
+
+function tr(text) {
+  return language === "en" ? translations[text] || text : text;
+}
+
+function applyLanguage(nextLanguage) {
+  language = nextLanguage === "en" ? "en" : "ru";
+  localStorage.setItem(LS_LANGUAGE, language);
+  document.documentElement.lang = language;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const text = node.nodeValue.trim();
+    if (!originalTextNodes.has(node)) originalTextNodes.set(node, text);
+    const source = originalTextNodes.get(node);
+    const translated = language === "en" ? translations[source] : source;
+    if (translated) node.nodeValue = node.nodeValue.replace(text, translated);
+  }
+  $$("[placeholder], [title], [aria-label]").forEach((element) => {
+    ["placeholder", "title", "aria-label"].forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+      if (!originalAttributes.has(element)) originalAttributes.set(element, {});
+      const originals = originalAttributes.get(element);
+      if (!(attribute in originals)) originals[attribute] = value;
+      const source = originals[attribute];
+      const translated = language === "en" ? translations[source] : source;
+      if (translated) element.setAttribute(attribute, translated);
+    });
+  });
+  $("#languageSelect").value = language;
+  MODES.work.label = tr("Работа");
+  MODES.break.label = tr("Перерыв");
+  MODES.rest.label = tr("Отдых");
+  PRIO.low.label = tr("Низкий");
+  PRIO.med.label = tr("Средний");
+  PRIO.high.label = tr("Высокий");
+  renderAll();
+  updateStatus(
+    timer.running
+      ? `${MODES[state.mode].label}${language === "en" ? " in progress" : " идёт"}`
+      : tr("Готов"),
+    timer.running ? "run" : "",
+  );
+}
 
 const MODES = {
   work: {
@@ -66,7 +253,7 @@ const timer = {
 
 let audioCtx = null;
 let currentAudio = null;
-let taskModal, helpModal, focusStatsModal;
+let taskModal, helpModal, focusStatsModal, onboardingModal, settingsModal;
 let focusPeriod = "month";
 let draggedTaskId = null;
 
@@ -96,6 +283,7 @@ function escapeHtml(str = "") {
 }
 
 function toast(msg, type = "ok", ms = 3200) {
+  msg = tr(msg);
   const icons = {
     ok: "bi-check-circle-fill",
     err: "bi-exclamation-triangle-fill",
@@ -329,7 +517,7 @@ function resetTimer(silent = false) {
   timer.remainMs = timer.totalMs;
   timer.endAt = 0;
   renderTimer();
-  if (!silent) updateStatus("Готов", "");
+  if (!silent) updateStatus(tr("Готов"), "");
 }
 
 function startTimer() {
@@ -339,7 +527,12 @@ function startTimer() {
   timer.running = true;
   timer.endAt = Date.now() + timer.remainMs;
   startTick();
-  updateStatus(MODES[state.mode].label + " идёт", "run");
+  updateStatus(
+    language === "en"
+      ? `${MODES[state.mode].label} in progress`
+      : `${MODES[state.mode].label} идёт`,
+    "run",
+  );
   renderTimer();
 }
 
@@ -348,7 +541,7 @@ function pauseTimer() {
   timer.remainMs = Math.max(0, timer.endAt - Date.now());
   timer.running = false;
   stopTick();
-  updateStatus("Пауза", "pause");
+  updateStatus(language === "en" ? "Paused" : "Пауза", "pause");
   renderTimer();
 }
 
@@ -402,14 +595,30 @@ function finishTimer() {
   $("#dial").classList.add("finished");
   setTimeout(() => $("#dial")?.classList.remove("finished"), 3200);
 
-  const msg = `«${MODES[finishedMode].label}» завершён → ${MODES[next].label}. Нажмите «Старт».`;
-  updateStatus(`${MODES[next].label}: ждёт старта`, "");
+  const msg =
+    language === "en"
+      ? `${MODES[finishedMode].label} complete → ${MODES[next].label}. Press Start.`
+      : `«${MODES[finishedMode].label}» завершён → ${MODES[next].label}. Нажмите «Старт».`;
+  updateStatus(
+    language === "en"
+      ? `${MODES[next].label}: ready to start`
+      : `${MODES[next].label}: ждёт старта`,
+    "",
+  );
   toast(msg, "info", 5000);
   notify(
-    `${MODES[finishedMode].label} завершён`,
-    `Следующий режим: ${MODES[next].label}`,
+    language === "en"
+      ? `${MODES[finishedMode].label} complete`
+      : `${MODES[finishedMode].label} завершён`,
+    language === "en"
+      ? `Next mode: ${MODES[next].label}`
+      : `Следующий режим: ${MODES[next].label}`,
   );
-  flashTitle(`✅ ${MODES[finishedMode].label} завершён`);
+  flashTitle(
+    language === "en"
+      ? `${MODES[finishedMode].label} complete`
+      : `✅ ${MODES[finishedMode].label} завершён`,
+  );
 }
 
 /** Работа → Перерыв (или Отдых по стрику) · Перерыв/Отдых → Работа. */
@@ -431,9 +640,9 @@ function switchMode(mode, { force = false } = {}) {
   if (timer.running && !force) {
     if (
       !confirm(
-        `Таймер «${MODES[state.mode].label}» ещё идёт. Переключиться на «${
-          MODES[mode].label
-        }» и сбросить отсчёт?`,
+        language === "en"
+          ? `The ${MODES[state.mode].label} timer is running. Switch to ${MODES[mode].label} and reset the countdown?`
+          : `Таймер «${MODES[state.mode].label}» ещё идёт. Переключиться на «${MODES[mode].label}» и сбросить отсчёт?`,
       )
     )
       return;
@@ -473,8 +682,7 @@ function updateNotifyBtn() {
   const btn = $("#btnNotify");
   if (!btn || !("Notification" in window)) return;
   if (Notification.permission === "granted") {
-    btn.innerHTML =
-      '<i class="bi bi-bell-fill"></i><span class="d-none d-sm-inline ms-1">Уведомления</span>';
+    btn.innerHTML = `<i class="bi bi-bell-fill me-2"></i>${tr("Уведомления")}`;
     btn.classList.add("on");
   }
 }
@@ -510,7 +718,7 @@ function renderTimer() {
 
   $("#dialTime").textContent = fmtTime(timer.remainMs);
   $("#dialLabel").textContent = m.label;
-  $("#dialSub").textContent = `${state.durations[state.mode]} мин`;
+  $("#dialSub").textContent = `${state.durations[state.mode]} ${tr("мин")}`;
   $("#dial").style.setProperty("--p", clamp(progress, 0, 1).toFixed(4));
   $("#dial").classList.toggle("running", timer.running);
 
@@ -518,8 +726,8 @@ function renderTimer() {
   $("#btnPause").disabled = !timer.running;
   $("#btnStart").innerHTML =
     !timer.running && timer.remainMs < timer.totalMs
-      ? '<i class="bi bi-play-fill"></i> Продолжить'
-      : '<i class="bi bi-play-fill"></i> Старт';
+      ? `<i class="bi bi-play-fill"></i> ${tr("Продолжить")}`
+      : `<i class="bi bi-play-fill"></i> ${tr("Старт")}`;
 
   updateTitle();
 }
@@ -545,22 +753,22 @@ function renderSettings() {
       }" data-srow="${key}">
         <div class="setting-name"><i class="bi ${m.icon}"></i>${m.label}</div>
         <input type="number" class="min-input" data-dur="${key}" min="1" max="180"
-               value="${state.durations[key]}" aria-label="Минуты: ${m.label}">
-        <span class="min-unit">мин</span>
+               value="${state.durations[key]}" aria-label="${tr("Минуты")}: ${m.label}">
+        <span class="min-unit">${tr("мин")}</span>
         <div class="sound-zone">
           <span class="sound-name ${
             custom ? "custom" : ""
-          }" title="${escapeHtml(custom ? snd.name : "Встроенный сигнал")}">
+          }" title="${escapeHtml(custom ? snd.name : tr("Встроенный сигнал"))}">
             <i class="bi ${
               custom ? "bi-music-note-beamed" : "bi-soundwave"
             }"></i>
-            ${escapeHtml(custom ? snd.name : "Встроенный")}
+            ${escapeHtml(custom ? snd.name : tr("Встроенный"))}
           </span>
-          <button class="btn-icon" data-play="${key}" title="Прослушать"><i class="bi bi-play-circle"></i></button>
-          <button class="btn-icon" data-upload="${key}" title="Загрузить свой MP3/WAV"><i class="bi bi-upload"></i></button>
+          <button class="btn-icon" data-play="${key}" title="${tr("Прослушать")}"><i class="bi bi-play-circle"></i></button>
+          <button class="btn-icon" data-upload="${key}" title="${tr("Загрузить свой MP3/WAV")}"><i class="bi bi-upload"></i></button>
           ${
             custom
-              ? `<button class="btn-icon danger" data-delsound="${key}" title="Вернуть встроенный"><i class="bi bi-x-lg"></i></button>`
+              ? `<button class="btn-icon danger" data-delsound="${key}" title="${tr("Вернуть встроенный")}"><i class="bi bi-x-lg"></i></button>`
               : ""
           }
           <input type="file" accept="audio/mpeg,audio/wav,audio/*,.mp3,.wav" data-file="${key}" hidden>
@@ -620,14 +828,13 @@ function renderCounter(bump = false) {
   const focusMin = todayEntry.duration;
 
   $("#statsRow").innerHTML = `
-    <div class="stat-chip"><i class="bi bi-calendar-check stat-icon"></i><b>${todayIters}</b><span>сегодня</span></div>
-    <div class="stat-chip"><i class="bi bi-check2-square stat-icon"></i><b>${done}/${total}</b><span>задач</span></div>
-    <div class="stat-chip"><i class="bi bi-stopwatch stat-icon"></i><b>${pomos}</b><span>на задачах</span></div>
-    <div class="stat-chip"><i class="bi bi-hourglass-split stat-icon"></i><b>${Math.floor(focusMin / 60)}ч ${
-      focusMin % 60
-    }м</b><span>фокуса</span></div>`;
+    <div class="stat-chip"><i class="bi bi-calendar-check stat-icon"></i><b>${todayIters}</b><span>${tr("сегодня")}</span></div>
+    <div class="stat-chip"><i class="bi bi-check2-square stat-icon"></i><b>${done}/${total}</b><span>${tr("задач")}</span></div>
+    <div class="stat-chip"><i class="bi bi-stopwatch stat-icon"></i><b>${pomos}</b><span>${tr("на задачах")}</span></div>
+    <div class="stat-chip"><i class="bi bi-hourglass-split stat-icon"></i><b>${language === "en" ? `${Math.floor(focusMin / 60)}h ${focusMin % 60}m` : `${Math.floor(focusMin / 60)}ч ${focusMin % 60}м`}</b><span>${tr("фокуса")}</span></div>`;
   const remainingBadge = $("#taskRemaining");
-  remainingBadge.textContent = `${remaining} осталось`;
+  remainingBadge.textContent =
+    language === "en" ? `${remaining} remaining` : `${remaining} осталось`;
   remainingBadge.classList.toggle("is-complete", remaining === 0 && total > 0);
 }
 
@@ -674,11 +881,14 @@ function renderFocusStats() {
         : 0;
       const x = left + index * (barWidth + gap);
       const y = top + plotHeight - barHeight;
-      const label = point.date.toLocaleDateString("ru-RU", {
-        day: "numeric",
-        month: "short",
-        timeZone: "UTC",
-      });
+      const label = point.date.toLocaleDateString(
+        language === "en" ? "en-US" : "ru-RU",
+        {
+          day: "numeric",
+          month: "short",
+          timeZone: "UTC",
+        },
+      );
       return `<rect class="focus-bar" data-date="${point.key}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${barWidth.toFixed(2)}" height="${barHeight.toFixed(2)}" rx="${Math.min(4, barWidth / 2)}"></rect>`;
     })
     .join("");
@@ -694,31 +904,41 @@ function renderFocusStats() {
       const x = left + index * (barWidth + gap) + barWidth / 2;
       const text =
         focusPeriod === "year"
-          ? point.date.toLocaleDateString("ru-RU", {
-              month: "short",
-              timeZone: "UTC",
-            })
-          : point.date.toLocaleDateString("ru-RU", {
-              day: "numeric",
-              month: "short",
-              timeZone: "UTC",
-            });
+          ? point.date.toLocaleDateString(
+              language === "en" ? "en-US" : "ru-RU",
+              {
+                month: "short",
+                timeZone: "UTC",
+              },
+            )
+          : point.date.toLocaleDateString(
+              language === "en" ? "en-US" : "ru-RU",
+              {
+                day: "numeric",
+                month: "short",
+                timeZone: "UTC",
+              },
+            );
       return `<text class="focus-axis-label" x="${x.toFixed(2)}" y="${height - 8}" text-anchor="middle">${text}</text>`;
     })
     .join("");
   const periodLabel =
-    focusPeriod === "week"
-      ? "за последние 7 дней"
-      : focusPeriod === "year"
-        ? "за последние 365 дней"
-        : "за последние 30 дней";
+    language === "en"
+      ? `for the last ${days} days`
+      : focusPeriod === "week"
+        ? "за последние 7 дней"
+        : focusPeriod === "year"
+          ? "за последние 365 дней"
+          : "за последние 30 дней";
   const totalHours = Math.floor(total / 60);
   const totalMinutes = total % 60;
   $("#focusStatsSummary").textContent =
-    `${periodLabel} · ${totalHours} ч ${totalMinutes} мин фокуса`;
+    language === "en"
+      ? `${periodLabel} · ${totalHours} h ${totalMinutes} min of focus`
+      : `${periodLabel} · ${totalHours} ч ${totalMinutes} мин фокуса`;
   $("#focusChart").innerHTML = total
     ? `<svg class="focus-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="${periodLabel}"><line class="focus-gridline" x1="${left}" y1="${top + plotHeight}" x2="${width - right}" y2="${top + plotHeight}"/>${bars}${labels}</svg>`
-    : '<div class="focus-chart-empty"><i class="bi bi-bar-chart-line"></i><span>За этот период записей пока нет</span></div>';
+    : `<div class="focus-chart-empty"><i class="bi bi-bar-chart-line"></i><span>${language === "en" ? "No records for this period yet" : "За этот период записей пока нет"}</span></div>`;
   $$("#focusPeriodSwitch .filter-btn").forEach((button) =>
     button.classList.toggle("active", button.dataset.period === focusPeriod),
   );
@@ -745,11 +965,11 @@ function showFocusTooltip(bar, event) {
     document.body.appendChild(tooltip);
   }
   tooltip.innerHTML = `
-    <div class="focus-tooltip-date"><i class="bi bi-calendar3"></i>${new Date(`${date}T00:00:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}</div>
-    <div class="focus-tooltip-row"><i class="bi bi-clock-history"></i><span>Время фокуса</span><b>${Math.floor((entry.duration || 0) / 60)} ч ${(entry.duration || 0) % 60} мин</b></div>
-    <div class="focus-tooltip-row"><i class="bi bi-record-circle"></i><span>Итераций Pomodoro</span><b>${entry.iterations || 0}</b></div>
-    <div class="focus-tooltip-row"><i class="bi bi-check2-circle"></i><span>Задач выполнено</span><b>${completed}</b></div>
-    <div class="focus-tooltip-row"><i class="bi bi-plus-circle"></i><span>Задач создано</span><b>${created}</b></div>`;
+    <div class="focus-tooltip-date"><i class="bi bi-calendar3"></i>${new Date(`${date}T00:00:00`).toLocaleDateString(language === "en" ? "en-US" : "ru-RU", { day: "numeric", month: "long", year: "numeric" })}</div>
+    <div class="focus-tooltip-row"><i class="bi bi-clock-history"></i><span>${language === "en" ? "Focus time" : "Время фокуса"}</span><b>${Math.floor((entry.duration || 0) / 60)} ${language === "en" ? "h" : "ч"} ${(entry.duration || 0) % 60} ${language === "en" ? "min" : "мин"}</b></div>
+    <div class="focus-tooltip-row"><i class="bi bi-record-circle"></i><span>${language === "en" ? "Pomodoro sessions" : "Итераций Pomodoro"}</span><b>${entry.iterations || 0}</b></div>
+    <div class="focus-tooltip-row"><i class="bi bi-check2-circle"></i><span>${language === "en" ? "Tasks completed" : "Задач выполнено"}</span><b>${completed}</b></div>
+    <div class="focus-tooltip-row"><i class="bi bi-plus-circle"></i><span>${language === "en" ? "Tasks created" : "Задач создано"}</span><b>${created}</b></div>`;
   tooltip.classList.add("visible");
   tooltip.style.left = `${Math.min(event.clientX + 14, window.innerWidth - tooltip.offsetWidth - 12)}px`;
   tooltip.style.top = `${Math.min(event.clientY + 14, window.innerHeight - tooltip.offsetHeight - 12)}px`;
@@ -757,6 +977,104 @@ function showFocusTooltip(bar, event) {
 
 function hideFocusTooltip() {
   $("#focusChartTooltip")?.classList.remove("visible");
+}
+
+/* ───────────────── first-visit onboarding ───────────────── */
+function showOnboardingFeatures(language) {
+  const content = {
+    ru: {
+      title: "Всё для продуктивной работы",
+      features: [
+        [
+          "bi-stopwatch",
+          "Таймер Pomodoro",
+          "Работа, короткий перерыв и длинный отдых с автоматическим переключением режимов.",
+        ],
+        [
+          "bi-list-check",
+          "Задачи и фокус",
+          "Создавайте задачи с приоритетом и Markdown-описанием, отмечайте выполненные и привязывайте таймер к текущей задаче.",
+        ],
+        [
+          "bi-music-note-beamed",
+          "Свои звуки",
+          "Загружайте сигналы MP3/WAV до 2 МБ или используйте мелодичные встроенные уведомления.",
+        ],
+        [
+          "bi-graph-up-arrow",
+          "Статистика",
+          "Следите за завершёнными сессиями, задачами и временем фокуса по дням.",
+        ],
+        [
+          "bi-download",
+          "Ваши данные под контролем",
+          "Данные хранятся только в браузере. Экспортируйте и импортируйте резервную копию JSON.",
+        ],
+        [
+          "bi-keyboard",
+          "Управление с клавиатуры",
+          "Space — старт/пауза, R — сброс, 1–3 — режимы, N — новая задача. Интерфейс адаптирован для мобильных устройств.",
+        ],
+      ],
+      finish: "Начать работу",
+    },
+    en: {
+      title: "Everything you need to stay productive",
+      features: [
+        [
+          "bi-stopwatch",
+          "Pomodoro timer",
+          "Focus, short break, and long rest modes with automatic switching when a session ends.",
+        ],
+        [
+          "bi-list-check",
+          "Tasks and focus",
+          "Create prioritized tasks with Markdown descriptions, track completion, and link the timer to a task.",
+        ],
+        [
+          "bi-music-note-beamed",
+          "Custom sounds",
+          "Upload MP3/WAV alerts up to 2 MB or use the built-in melodic notifications.",
+        ],
+        [
+          "bi-graph-up-arrow",
+          "Statistics",
+          "Track completed sessions, tasks, and your daily focus time.",
+        ],
+        [
+          "bi-download",
+          "Your data stays yours",
+          "Everything is stored locally in your browser. Export and import JSON backups anytime.",
+        ],
+        [
+          "bi-keyboard",
+          "Keyboard shortcuts",
+          "Space — start/pause, R — reset, 1–3 — switch modes, N — new task. The interface also works on mobile.",
+        ],
+      ],
+      finish: "Get started",
+    },
+  }[language];
+
+  $("#onboardingTitle").textContent = content.title;
+  $("#onboardingFeatures").innerHTML = content.features
+    .map(
+      ([icon, title, description]) => `
+    <div class="d-flex gap-3 mb-3">
+      <i class="bi ${icon} text-grad fs-5"></i>
+      <div><strong>${title}</strong><div class="text-muted-soft">${description}</div></div>
+    </div>`,
+    )
+    .join("");
+  $("#onboardingFinish").textContent = content.finish;
+  $("#onboardingLanguageStep").classList.add("d-none");
+  $("#onboardingFeatureStep").classList.remove("d-none");
+  $("#onboardingFooter").classList.remove("d-none");
+}
+
+function initOnboarding() {
+  if (localStorage.getItem(LS_FIRST_VISIT) === "done") return;
+  onboardingModal.show();
 }
 
 /* ───────────────── Рендер: задачи ───────────────── */
@@ -814,8 +1132,8 @@ function renderTasks() {
   $("#emptyState").classList.toggle("d-none", items.length > 0);
   $("#emptyState").querySelector("div").textContent =
     state.tasks.length === 0
-      ? "Задач пока нет. Добавьте первую — и запускайте таймер."
-      : "В этом фильтре задач нет.";
+      ? tr("Задач пока нет. Добавьте первую — и запускайте таймер.")
+      : tr("В этом фильтре задач нет.");
 
   let previousDate = null;
   list.innerHTML = items
@@ -824,7 +1142,10 @@ function renderTasks() {
       const isFocus = t.id === state.focusTaskId;
       const hasDesc = !!t.desc.trim();
       const createdDate = new Date(t.createdAt)
-        .toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
+        .toLocaleDateString(language === "en" ? "en-US" : "ru-RU", {
+          day: "numeric",
+          month: "short",
+        })
         .replace(/ г\.?$/, "");
       const divider =
         createdDate !== previousDate
@@ -837,27 +1158,27 @@ function renderTasks() {
     }" data-prio="${t.prio}" data-id="${t.id}">
       
       <div class="task-head" draggable="true">
-      <span class="task-drag-handle" title="Перетащить задачу" aria-label="Перетащить задачу"><i class="bi bi-grip-vertical"></i></span>
+      <span class="task-drag-handle" title="${tr("Перетащить задачу")}" aria-label="${tr("Перетащить задачу")}"><i class="bi bi-grip-vertical"></i></span>
         <button class="task-check ${t.done ? "checked" : ""}" data-act="toggle"
-                title="${t.done ? "Вернуть в работу" : "Отметить выполненной"}"
+                title="${tr(t.done ? "Вернуть в работу" : "Отметить выполненной")}"
                 aria-pressed="${t.done}"><i class="bi bi-check-lg"></i></button>
 
         <div class="task-main">
           <h3 class="task-title">${escapeHtml(t.title)}</h3>
           <div class="task-meta">
             <span class="prio-tag ${p.cls}">${p.label}</span>
-            <span class="pomo-counter" title="Итерации помодоро по задаче">
-              <button class="btn-round sm" data-act="pomo-" aria-label="Минус итерация"><i class="bi bi-dash-lg"></i></button>
+            <span class="pomo-counter" title="${tr("Итерации помодоро по задаче")}">
+              <button class="btn-round sm" data-act="pomo-" aria-label="${tr("Минус итерация")}"><i class="bi bi-dash-lg"></i></button>
               <span class="pomo-val"><i class="bi bi-record-circle"></i>${
                 t.pomos
               }</span>
-              <button class="btn-round sm" data-act="pomo+" aria-label="Плюс итерация"><i class="bi bi-plus-lg"></i></button>
+              <button class="btn-round sm" data-act="pomo+" aria-label="${tr("Плюс итерация")}"><i class="bi bi-plus-lg"></i></button>
             </span>
             ${
               hasDesc
                 ? `<button class="desc-toggle ms-1" data-act="expand">
                 <i class="bi bi-chevron-${t.expanded ? "up" : "down"}"></i>
-                ${t.expanded ? "Свернуть" : "Описание"}
+                ${t.expanded ? tr("Свернуть") : tr("Описание")}
               </button>`
                 : ""
             }
@@ -867,11 +1188,11 @@ function renderTasks() {
         <div class="task-actions">
           
           <button class="btn-icon ${isFocus ? "on" : ""}" data-act="focus"
-                  title="${
-                    isFocus ? "Снять фокус" : "Считать помодоро на эту задачу"
-                  }"><i class="bi bi-crosshair"></i></button>
-          <button class="btn-icon" data-act="edit" title="Редактировать"><i class="bi bi-pencil"></i></button>
-          <button class="btn-icon danger" data-act="del" title="Удалить"><i class="bi bi-trash3"></i></button>
+                  title="${tr(
+                    isFocus ? "Снять фокус" : "Считать помодоро на эту задачу",
+                  )}"><i class="bi bi-crosshair"></i></button>
+          <button class="btn-icon" data-act="edit" title="${tr("Редактировать")}"><i class="bi bi-pencil"></i></button>
+          <button class="btn-icon danger" data-act="del" title="${tr("Удалить")}"><i class="bi bi-trash3"></i></button>
         </div>
       </div>
       ${
@@ -974,12 +1295,16 @@ function openTaskModal(id = null) {
   $("#taskPomos").value = isEdit ? t.pomos : 0;
   $("#taskCreatedAtGroup").classList.toggle("d-none", !isEdit);
   $("#taskCreatedAt").value = isEdit
-    ? new Date(t.createdAt).toLocaleString("ru-RU")
+    ? new Date(t.createdAt).toLocaleString(
+        language === "en" ? "en-US" : "ru-RU",
+      )
     : "";
   $("#taskCompletedAtGroup").classList.toggle("d-none", !isEdit || !t.done);
   $("#taskCompletedAt").value =
     isEdit && t.done && t.completedAt
-      ? new Date(t.completedAt).toLocaleDateString("ru-RU")
+      ? new Date(t.completedAt).toLocaleDateString(
+          language === "en" ? "en-US" : "ru-RU",
+        )
       : "";
 
   setMdTab("edit");
@@ -998,7 +1323,7 @@ function setMdTab(tab) {
     const src = $("#taskDesc").value.trim();
     $("#taskDescPreview").innerHTML = src
       ? renderMarkdown(src)
-      : '<div class="text-muted-soft small">Описание пусто. Markdown поддерживает заголовки, списки, ссылки, картинки, код и таблицы.</div>';
+      : `<div class="text-muted-soft small">${tr("Описание пусто. Markdown поддерживает заголовки, списки, ссылки, картинки, код и таблицы.")}</div>`;
   }
 }
 
@@ -1246,7 +1571,7 @@ function bindEvents() {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", draggedTaskId);
   });
-  
+
   taskList.addEventListener("dragover", (e) => {
     if (!draggedTaskId) return;
     e.preventDefault();
@@ -1263,7 +1588,7 @@ function bindEvents() {
       e.clientY >= rect.top + rect.height / 2,
     );
   });
-  
+
   taskList.addEventListener("drop", (e) => {
     if (!draggedTaskId) return;
     e.preventDefault();
@@ -1385,6 +1710,25 @@ function bindEvents() {
   /* --- Прочее --- */
   $("#btnNotify").addEventListener("click", requestNotify);
   $("#btnHelp").addEventListener("click", () => helpModal.show());
+  $("#btnSettings").addEventListener("click", () => settingsModal.show());
+  $("#languageSelect").addEventListener("change", (e) =>
+    applyLanguage(e.target.value),
+  );
+  $("#settingsModal").addEventListener("click", (e) => {
+    if (e.target.closest("#btnExport, #btnImport, #btnClearAll, #btnNotify"))
+      settingsModal.hide();
+  });
+  $("#onboardingLanguageStep").addEventListener("click", (e) => {
+    const button = e.target.closest("[data-onboarding-language]");
+    if (!button) return;
+    const selectedLanguage = button.dataset.onboardingLanguage;
+    applyLanguage(selectedLanguage);
+    showOnboardingFeatures(selectedLanguage);
+  });
+  $("#onboardingFinish").addEventListener("click", () => {
+    localStorage.setItem(LS_FIRST_VISIT, "done");
+    onboardingModal.hide();
+  });
 
   /* --- Горячие клавиши --- */
   document.addEventListener("keydown", (e) => {
@@ -1456,6 +1800,11 @@ function init() {
   taskModal = new bootstrap.Modal($("#taskModal"));
   helpModal = new bootstrap.Modal($("#helpModal"));
   focusStatsModal = new bootstrap.Modal($("#focusStatsModal"));
+  settingsModal = new bootstrap.Modal($("#settingsModal"));
+  onboardingModal = new bootstrap.Modal($("#onboardingModal"), {
+    backdrop: "static",
+    keyboard: false,
+  });
 
   $("#chkLongRest").checked = state.longRest;
   $("#numLongEvery").value = state.longRestEvery;
@@ -1465,7 +1814,9 @@ function init() {
   updateNotifyBtn();
   resetTimer();
   renderAll();
-  updateStatus("Готов", "");
+  updateStatus(tr("Готов"), "");
+  applyLanguage(language);
+  initOnboarding();
 }
 
 document.addEventListener("DOMContentLoaded", init);

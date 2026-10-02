@@ -152,15 +152,6 @@
         ><i class="bi bi-circle-fill me-1 tiny"></i><span id="statusText">Готов</span></span>
         <button
           class="btn btn-ghost btn-sm"
-          id="btnNotify"
-          title="Разрешить уведомления браузера"
-        >
-          <i class="bi bi-bell"></i><span class="d-none d-md-inline ms-1">Уведомления</span>
-        </button>
-
-
-        <button
-          class="btn btn-ghost btn-sm"
           id="btnFocusStats"
         >
           <i class="bi bi-graph-up-arrow"></i>
@@ -168,34 +159,17 @@
         </button>
         <button
           class="btn btn-ghost btn-sm"
-          id="btnExport"
+          id="btnSettings"
+          title="Настройки"
+          aria-label="Настройки"
         >
-          <i class="bi bi-download"></i>
-          <span class="d-none d-md-inline">Экспортировать</span>
+          <i class="bi bi-gear"></i>
         </button>
-        <button
-          class="btn btn-ghost btn-sm"
-          id="btnImport"
-        >
-          <i class="bi bi-upload"></i>
-          <span class="d-none d-md-inline">Импортировать</span>
-        </button>
-        <button
-          class="btn btn-danger-soft btn-sm"
-          id="btnClearAll"
-        >
-          <i class="bi bi-trash3"></i>
-        </button>
-        <input
-          type="file"
-          id="importFile"
-          accept="application/json,.json"
-          hidden
-        />
         <button
           class="btn btn-ghost btn-sm"
           id="btnHelp"
           title="Справка и горячие клавиши"
+          aria-label="Справка и горячие клавиши"
         >
           <i class="bi bi-question-circle"></i>
         </button>
@@ -431,10 +405,69 @@
     </div>
 
     <footer class="text-center small text-muted-soft py-4">
-      Данные хранятся локально в вашем браузере (localStorage) ·
+      Data stores locally in your browser (localStorage) ·
       Pomodoro.Flow<br />
       <a href="https://illoprin.ru">Ещё больше моих проектов на illoprin.ru</a>
     </footer>
+  </div>
+
+  <!-- ══════════ first-visit welcome modal ══════════ -->
+  <div
+    class="modal fade"
+    id="onboardingModal"
+    tabindex="-1"
+    aria-hidden="true"
+    aria-labelledby="onboardingTitle"
+  >
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content glass-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="onboardingTitle">Выберите язык / Choose your language</h5>
+        </div>
+        <div class="modal-body">
+          <div id="onboardingLanguageStep" class="d-grid gap-3">
+            <p class="text-muted-soft mb-1">На каком языке показать знакомство с приложением?</p>
+            <button type="button" class="btn btn-ghost text-start" data-onboarding-language="ru">
+              <span class="fs-4 me-2" aria-hidden="true">🇷🇺</span> Русский
+            </button>
+            <button type="button" class="btn btn-ghost text-start" data-onboarding-language="en">
+              <span class="fs-4 me-2" aria-hidden="true">🇬🇧</span> English
+            </button>
+          </div>
+          <div id="onboardingFeatureStep" class="d-none">
+            <div id="onboardingFeatures" class="small"></div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 d-none" id="onboardingFooter">
+          <button type="button" class="btn btn-accent" id="onboardingFinish"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true" aria-labelledby="settingsTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="settingsTitle">Настройки</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small text-muted-soft" for="languageSelect">Язык интерфейса</label>
+          <select class="form-select glass-input mb-4" id="languageSelect">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+          <div class="d-grid gap-2">
+            <button class="btn btn-ghost text-start" id="btnNotify" title="Разрешить уведомления браузера"><i class="bi bi-bell me-2"></i>Уведомления</button>
+            <button class="btn btn-ghost text-start" id="btnExport"><i class="bi bi-download me-2"></i>Экспортировать данные</button>
+            <button class="btn btn-ghost text-start" id="btnImport"><i class="bi bi-upload me-2"></i>Импортировать данные</button>
+            <button class="btn btn-danger-soft text-start" id="btnClearAll"><i class="bi bi-trash3 me-2"></i>Удалить все данные</button>
+          </div>
+          <input type="file" id="importFile" accept="application/json,.json" hidden />
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════ МОДАЛКА ЗАДАЧИ ══════════ -->

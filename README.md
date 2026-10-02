@@ -16,11 +16,11 @@
 A modern, feature-rich Pomodoro timer with task management that runs right in your browser. It features a glassmorphism design, dark mode, local data storage, and customizable sound notifications.
 
 <p align="center">
-  <img src="./img/img1.jpg" alt="Pomodoro.Flow main screen">
+  <img src="./img/img1.webp" alt="Pomodoro.Flow main screen">
 </p>
 
 <p align="center">
-  <img src="./img/img2.jpg" alt="Focus time">
+  <img src="./img/img2.webp" alt="Focus time">
 </p>
 
 ## ✨ Features
